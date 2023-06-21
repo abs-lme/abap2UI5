@@ -29,6 +29,9 @@ CLASS z2ui5_cl_http_handler DEFINITION
         VALUE(r_result)         TYPE string.
 
     CLASS-METHODS http_post
+        importing
+            body type string optional
+            service type string optional
       RETURNING
         VALUE(result) TYPE string.
 
@@ -318,6 +321,8 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
 
   METHOD http_post.
 
+    z2ui5_lcl_fw_handler=>so_body = z2ui5_lcl_utility_tree_json=>factory( body ).
+    config-handler = service.
     DATA(lo_handler) = z2ui5_lcl_fw_handler=>request_begin( ).
 
     DO.

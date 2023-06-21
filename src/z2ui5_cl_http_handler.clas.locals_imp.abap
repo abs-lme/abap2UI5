@@ -341,6 +341,7 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD trans_object_2_xml.
+
     FIELD-SYMBOLS <object> TYPE any.
 
     ASSIGN object->* TO <object>.
@@ -350,6 +351,7 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
          SOURCE data = <object>
          RESULT XML result
          OPTIONS data_refs = `heap-or-create`.
+
   ENDMETHOD.
 
   METHOD trans_ref_tab_2_tab.

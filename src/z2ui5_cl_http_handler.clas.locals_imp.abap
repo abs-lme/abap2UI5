@@ -854,7 +854,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
 *        IF lv_params IS NOT INITIAL.
 *          lv_link = lv_link && `?` && lv_params.
 *        ENDIF.
-data(lv_link) = ``.
+        DATA(lv_link) = ``.
       CATCH cx_root.
     ENDTRY.
 
@@ -1252,20 +1252,20 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
     result = NEW #( ).
     result->ms_db-id = z2ui5_lcl_utility=>get_uuid( ).
 
-    TRY.
-*        DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
-        FIELD-SYMBOLS <path> TYPE string.
-        ASSIGN ('SO_BODY->MR_ACTUAL->OLOCATION->PATHNAME->*') TO <path>.
-        SPLIT <path> AT z2ui5_cl_http_handler=>config-handler && '/' INTO DATA(lv_dummy) <path>.
-*        SPLIT <path> AT `/` INTO TABLE DATA(lt_tab).
-        DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( <path> ).
-      CATCH cx_root.
-    ENDTRY.
+*    TRY.
+**        DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
+*        FIELD-SYMBOLS <path> TYPE string.
+*        ASSIGN ('SO_BODY->MR_ACTUAL->OLOCATION->PATHNAME->*') TO <path>.
+*        SPLIT <path> AT z2ui5_cl_http_handler=>config-handler && '/' INTO DATA(lv_dummy) <path>.
+**        SPLIT <path> AT `/` INTO TABLE DATA(lt_tab).
+*        DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( <path> ).
+*      CATCH cx_root.
+*    ENDTRY.
 
     " TODO: variable is assigned but never used (ABAP cleaner)
-*    SPLIT lv_path_info AT `?` INTO lv_path_info DATA(lv_dummy).
-*     DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
-*    SHIFT lv_classname LEFT DELETING LEADING `/`.
+    SPLIT z2ui5_cl_http_handler=>config-path_info AT `?` INTO DATA(lv_path_info) DATA(lv_dummy).
+    data(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
+    SHIFT lv_classname LEFT DELETING LEADING `/`.
 
     IF lv_classname IS INITIAL.
       result = result->set_app_system( ).

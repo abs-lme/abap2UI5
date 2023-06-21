@@ -17,7 +17,7 @@ CLASS z2ui5_cl_http_handler DEFINITION
         pathname type string,
         origin type string,
         search type string,
-        handler type string,
+        path_info type string,
       END OF config.
 
     CLASS-METHODS http_get
@@ -31,7 +31,7 @@ CLASS z2ui5_cl_http_handler DEFINITION
     CLASS-METHODS http_post
         importing
             body type string optional
-            service type string optional
+            path_info type string optional
       RETURNING
         VALUE(result) TYPE string.
 
@@ -322,7 +322,7 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
   METHOD http_post.
 
     z2ui5_lcl_fw_handler=>so_body = z2ui5_lcl_utility_tree_json=>factory( body ).
-    config-handler = service.
+    config-path_info = path_info.
     DATA(lo_handler) = z2ui5_lcl_fw_handler=>request_begin( ).
 
     DO.

@@ -1255,9 +1255,9 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 *        DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
         FIELD-SYMBOLS <path> TYPE string.
         ASSIGN ('SO_BODY->MR_ACTUAL->OLOCATION->PATHNAME->*') TO <path>.
-        SPLIT <path> AT z2ui5_cl_http_handler=>config-handler && '/' into DATA(lv_dummy) <path>.
+        SPLIT <path> AT z2ui5_cl_http_handler=>config-handler && '/' INTO DATA(lv_dummy) <path>.
 *        SPLIT <path> AT `/` INTO TABLE DATA(lt_tab).
-          DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( <path> ).
+        DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( <path> ).
       CATCH cx_root.
     ENDTRY.
 
@@ -1489,4 +1489,58 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
   METHOD z2ui5_if_client~get_app.
     result = CAST #( z2ui5_lcl_fw_db=>load_app( id )-o_app ).
   ENDMETHOD.
+
+  METHOD z2ui5_if_client~set_popover.
+
+*    mo_handler->ms_next-s_set-xml_popup = val.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~set_popup.
+
+    mo_handler->ms_next-s_set-xml_popup = val.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~set_view.
+
+    mo_handler->ms_next-s_set-xml_main = val.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~__bind.
+
+    result = mo_handler->_create_binding( value = val type = z2ui5_lcl_fw_handler=>cs_bind_type-one_way ).
+    IF path = abap_false.
+      result = `{` && result && `}`.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~__bind_edit.
+
+    result = mo_handler->_create_binding( value          = val
+                                            type           = z2ui5_lcl_fw_handler=>cs_bind_type-two_way ).
+    IF path = abap_false.
+      result = `{` && result && `}`.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~__event_frontend.
+
+  ENDMETHOD.
+
+  METHOD z2ui5_if_client~__event.
+
+    result = `onEvent( { 'EVENT' : '` && val && `', 'METHOD' : 'UPDATE' , 'isHoldView' : ` && z2ui5_lcl_utility=>get_json_boolean( abap_true ) && ` }`.
+
+    LOOP AT t_arg REFERENCE INTO DATA(lr_arg).
+      result = result && `,` && lr_arg->*.
+    ENDLOOP.
+
+    result = result && `)`.
+
+  ENDMETHOD.
+
 ENDCLASS.

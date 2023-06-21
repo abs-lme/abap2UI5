@@ -112,6 +112,11 @@ INTERFACE z2ui5_if_client
   METHODS _event_close_popup
     RETURNING VALUE(result) TYPE string.
 
+  METHODS __event
+    IMPORTING val           TYPE clike
+*              hold_view     TYPE abap_bool    DEFAULT abap_false
+              t_arg         TYPE string_table OPTIONAL
+    RETURNING VALUE(result) TYPE string.
 
   METHODS __bind
     IMPORTING val           TYPE data

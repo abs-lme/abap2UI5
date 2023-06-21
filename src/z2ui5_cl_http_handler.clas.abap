@@ -196,12 +196,13 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                        sap.m[sap.z2ui5.oResponse.S_MSG.CONTROL][sap.z2ui5.oResponse.S_MSG.TYPE](sap.z2ui5.oResponse.S_MSG.TEXT);` && |\n| &&
                            `                    }` && |\n| &&
                            |\n| &&
-                           `                    if (!sap.z2ui5.oResponse.PARAMS.XML_MAIN || sap.z2ui5.isHoldView ) {` && |\n| &&
+                           `                    if (!sap.z2ui5.oResponse.PARAMS.XML_MAIN) { if ( sap.z2ui5.isHoldView ) {` && |\n| &&
                            `                        var oModel = new sap.ui.model.json.JSONModel(sap.z2ui5.oResponse.OVIEWMODEL);` && |\n| &&
                            `                        sap.z2ui5.oView.setModel(oModel);` && |\n| &&
                            `                        sap.z2ui5.onAfter();` && |\n| &&
                            `                        return;` && |\n| &&
-                           `                    }` && |\n| &&
+                           `                        } }` && |\n| &&
+                           `  if ( sap.z2ui5.isHoldView ) { sap.z2ui5.oView.destroy(); }` && |\n| &&
                            |\n| &&
                            `                    var oModel = new sap.ui.model.json.JSONModel(sap.z2ui5.oResponse.OVIEWMODEL);` && |\n| &&
                            `                    var oView = new sap.ui.core.mvc.XMLView.create({` && |\n| &&
@@ -239,7 +240,7 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                document.title = sap.z2ui5.oResponse.PARAMS.TITLE;` && |\n| &&
                            `            }` && |\n| &&
                            `            if (sap.z2ui5.oResponse.PARAMS.PATH != "") {` && |\n| &&
-                           `                window.history.replaceState("", "", window.location.origin + sap.z2ui5.oResponse.PARAMS.PATH + window.location.search);` && |\n| &&
+                           `            //    window.history.replaceState("", "", window.location.origin + sap.z2ui5.oResponse.PARAMS.PATH + window.location.search);` && |\n| &&
                            `            }` && |\n| &&
                            `            var oView = sap.z2ui5.oView;` && |\n| &&
                            `            try {` && |\n| &&

@@ -9,12 +9,7 @@ CLASS z2ui5_lcl_utility DEFINITION INHERITING FROM cx_no_check.
         type           TYPE string,
         bind_type      TYPE string,
         data_stringify TYPE string,
-        gen_type_kind  TYPE string,
-        gen_type       TYPE string,
-        gen_kind       TYPE string,
-
-        o_typedescr    TYPE REF TO cl_abap_typedescr,
-        rtti_data      TYPE string,
+        check_ref_data TYPE abap_bool,
       END OF ty_attri.
     TYPES ty_T_attri TYPE STANDARD TABLE OF ty_attri WITH EMPTY KEY.
 
@@ -103,19 +98,6 @@ CLASS z2ui5_lcl_utility DEFINITION INHERITING FROM cx_no_check.
                 iv_attri      TYPE csequence
       RETURNING VALUE(result) TYPE abap_attrdescr_tab.
 
-    CLASS-METHODS rtti_get
-      IMPORTING
-        data          TYPE any
-      RETURNING
-        VALUE(result) TYPE string.
-
-    CLASS-METHODS rtti_set
-      IMPORTING
-        rtti_data TYPE string
-      EXPORTING
-        e_data    TYPE REF TO data.
-
-
   PROTECTED SECTION.
     CLASS-DATA mv_counter TYPE i.
 
@@ -123,47 +105,6 @@ ENDCLASS.
 
 
 CLASS z2ui5_lcl_utility IMPLEMENTATION.
-
-  METHOD rtti_get.
-
-    TRY.
-
-        DATA srtti TYPE REF TO object.
-
-        CALL METHOD ('ZCL_SRTTI_TYPEDESCR')=>('CREATE_BY_DATA_OBJECT')
-          EXPORTING
-            data_object = data
-          RECEIVING
-            srtti       = srtti.
-
-        CALL TRANSFORMATION id SOURCE srtti = srtti dobj = data RESULT XML result.
-
-      CATCH cx_sy_dyn_call_illegal_class INTO DATA(x).
-        RAISE EXCEPTION TYPE z2ui5_lcl_utility
-          EXPORTING
-            val = `Please install the open-source project SRTTI to use generic data https://github.com/sandraros/S-RTTI`.
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD rtti_set.
-
-    DATA srtti TYPE REF TO object.
-    CALL TRANSFORMATION id SOURCE XML rtti_data RESULT srtti = srtti.
-
-    DATA rtti_type TYPE REF TO cl_abap_typedescr.
-    CALL METHOD srtti->('GET_RTTI')
-      RECEIVING
-        rtti = rtti_type.
-
-    DATA lo_datadescr TYPE REF TO cl_abap_datadescr.
-    lo_datadescr ?= rtti_type.
-
-    CREATE DATA e_data TYPE HANDLE lo_datadescr.
-    ASSIGN e_data->* TO FIELD-SYMBOL(<variable>).
-    CALL TRANSFORMATION id SOURCE XML rtti_data RESULT dobj = <variable>.
-
-  ENDMETHOD.
 
   METHOD get_trim_upper.
     result = CONV #( val ).
@@ -294,16 +235,12 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
       ASSIGN (lv_assign) TO <any>.
 
       DATA(lo_descr) = cl_abap_datadescr=>describe_by_data( <any> ).
-*      IF ls_attri2-type_kind = `r`.
       TRY.
-*           data(lo_descr) = cl_abap_datadescr=>describe_by_data( <any> ).
           DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
           DATA(lo_reftype) = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
-          ls_attri2-o_typedescr = lo_reftype.
-          ls_attri2-gen_type = 'X'.
+          ls_attri2-check_ref_data = abap_true.
         CATCH cx_root.
       ENDTRY.
-*      ENDIF.
 
       APPEND ls_attri2 TO result.
     ENDLOOP.
@@ -679,7 +616,6 @@ CLASS z2ui5_lcl_fw_handler DEFINITION.
     METHODS _create_binding
       IMPORTING value          TYPE data
                 type           TYPE string    DEFAULT cs_bind_type-two_way
-                check_gen_data TYPE abap_bool OPTIONAL
       RETURNING VALUE(result)  TYPE string.
 
     CLASS-METHODS set_app_start
@@ -716,10 +652,11 @@ ENDCLASS.
 CLASS z2ui5_lcl_fw_db DEFINITION.
 
   PUBLIC SECTION.
-    CLASS-METHODS create
 
-      IMPORTING id        TYPE string
-                VALUE(db) TYPE z2ui5_lcl_fw_handler=>ty_s_db.
+    CLASS-METHODS create
+      IMPORTING
+        id TYPE string
+        db TYPE z2ui5_lcl_fw_handler=>ty_s_db.
 
     CLASS-METHODS load_app
       IMPORTING id            TYPE string
@@ -1030,54 +967,15 @@ ENDCLASS.
 CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
 
   METHOD load_app.
+
     DATA(ls_db) = read( id ).
 
     z2ui5_lcl_utility=>trans_xml_2_object( EXPORTING xml  = ls_db-data
                                            IMPORTING data = result ).
 
-*    DATA(lo_app) = CAST object( result-o_app ).
-*
-*    LOOP AT result-t_attri REFERENCE INTO DATA(lr_attri) WHERE rtti_data IS NOT INITIAL.
-*
-*      FIELD-SYMBOLS <attribute> TYPE any.
-*      DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
-*      ASSIGN (lv_name) TO <attribute>.
-*
-*      z2ui5_lcl_utility=>rtti_set(
-*        EXPORTING
-*          rtti_data = lr_attri->rtti_data
-*        IMPORTING
-*           e_data    =  <attribute>
-*      ).
-*
-*      DATA(lo_descr) = cl_abap_datadescr=>describe_by_data( <attribute> ).
-*      DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
-*      lr_attri->o_typedescr = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
-*
-*      CLEAR lr_attri->rtti_data.
-*
-*    ENDLOOP.
-
   ENDMETHOD.
 
   METHOD create.
-
-    DATA(lo_app) = CAST object( db-o_app ) ##NEEDED.
-
-*    LOOP AT db-t_attri REFERENCE INTO DATA(lr_attri).
-*
-*      IF lr_attri->o_typedescr IS BOUND.
-*
-*        FIELD-SYMBOLS <attribute> TYPE any.
-*        DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
-*        ASSIGN (lv_name) TO <attribute>.
-*        ASSIGN <attribute>->* TO <attribute>.
-*        lr_attri->rtti_data = z2ui5_lcl_utility=>rtti_get( <attribute> ).
-*        CLEAR <attribute>.
-*        CLEAR lr_attri->o_typedescr.
-*
-*      ENDIF.
-*    ENDLOOP.
 
     DATA(ls_db) = VALUE z2ui5_t_draft( uuid                = id
                                        uuid_prev           = db-id_prev
@@ -1200,7 +1098,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
           ASSIGN (lv_name) TO <frontend>.
           z2ui5_lcl_utility=>raise( when = xsdbool( sy-subrc <> 0 ) ).
 
-          IF lr_attri->gen_type IS NOT INITIAL.
+          IF lr_attri->check_ref_data IS NOT INITIAL.
             ASSIGN <backend>->* TO <backend>.
 
             TRY.
@@ -1234,6 +1132,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD model_set_frontend.
+
     CONSTANTS c_prefix TYPE string VALUE `LO_APP->`.
 
     DATA(r_view_model) = z2ui5_lcl_utility_tree_json=>factory( ).
@@ -1254,11 +1153,6 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
       DATA(lv_name) = c_prefix && to_upper( lr_attri->name ).
       ASSIGN (lv_name) TO <attribute>.
       z2ui5_lcl_utility=>raise( when = xsdbool( sy-subrc <> 0 ) ).
-
-      IF lr_attri->gen_kind IS NOT INITIAL.
-        lv_name = '<ATTRIBUTE>->*'.
-        ASSIGN (lv_name) TO <attribute>.
-      ENDIF.
 
       CASE lr_attri->type_kind.
 
@@ -1445,38 +1339,13 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
       DATA lr_ref TYPE REF TO data.
       GET REFERENCE OF <attribute> INTO lr_ref.
 
-      IF lr_attri->gen_type IS NOT INITIAL.
+      IF lr_attri->check_ref_data IS NOT INITIAL.
 
         FIELD-SYMBOLS <field> TYPE any.
         ASSIGN lr_ref->* TO <field>.
         lr_ref = CAST data( <field> ).
 
       ENDIF.
-*      IF check_gen_data = abap_true.
-*        TRY.
-*            FIELD-SYMBOLS <field> TYPE any.
-*            ASSIGN lr_ref->* TO <field>.
-*            lr_ref = CAST data( <field> ).
-*            IF lr_attri->gen_type IS INITIAL.
-*              FIELD-SYMBOLS <field2> TYPE any.
-*              ASSIGN lr_ref->* TO <field2>.
-*              DATA(lo_datadescr) = cl_abap_datadescr=>describe_by_data( <field2> ).
-*              lr_attri->gen_type_kind = lo_datadescr->type_kind.
-*              lr_attri->gen_kind      = lo_datadescr->kind.
-*              CASE lo_datadescr->kind.
-*                WHEN lo_datadescr->kind_elem.
-*                  " TODO: variable is assigned but never used (ABAP cleaner)
-*                  SPLIT lo_datadescr->absolute_name AT '=' INTO DATA(lv_dummy) lr_attri->gen_type.
-*                WHEN lo_datadescr->kind_table.
-*                  DATA(lo_tab) = CAST cl_abap_tabledescr( lo_datadescr ).
-*                  DATA(lo_struc) = lo_tab->get_table_line_type( ).
-*                  SPLIT lo_struc->absolute_name AT '=' INTO lv_dummy lr_attri->gen_type.
-*              ENDCASE.
-*            ENDIF.
-*          CATCH cx_root.
-*            CONTINUE.
-*        ENDTRY.
-*      ENDIF.
 
       IF lr_in = lr_ref.
         IF lr_attri->bind_type IS NOT INITIAL AND lr_attri->bind_type <> type.
@@ -1504,9 +1373,6 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_app_system.
-    IF ms_db-o_app IS BOUND.
-*      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
-    ENDIF.
 
     result = NEW #( ).
     result->ms_db-id = z2ui5_lcl_utility=>get_uuid( ).
@@ -1517,7 +1383,6 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
     IF ix IS BOUND.
 
-*      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
       result->ms_db-o_app             = z2ui5_lcl_fw_app=>factory_error( error = ix  ).
 
       result->ms_db-id_prev_app       = ms_db-id.
@@ -1574,8 +1439,7 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
 
   METHOD z2ui5_if_client~_bind.
     result = mo_handler->_create_binding( value          = val
-                                          type           = z2ui5_lcl_fw_handler=>cs_bind_type-two_way
-                                          check_gen_data = check_gen_data ).
+                                          type           = z2ui5_lcl_fw_handler=>cs_bind_type-two_way ).
     IF path = abap_false.
       result = `{` && result && `}`.
     ENDIF.

@@ -1,6 +1,14 @@
 INTERFACE z2ui5_if_client
   PUBLIC.
 
+  CONSTANTS:
+    BEGIN OF cs_event,
+      event_popup_close   TYPE string VALUE `POPUP_CLOSE`,
+      event_popover_close TYPE string VALUE `POPOVER_CLOSE`,
+      go_back             TYPE string VALUE `GO_BACK`,
+      go_forward          TYPE string VALUE `GO_FORWARD`,
+    END OF cs_event.
+
   TYPES:
     BEGIN OF ty_s_name_value,
       name  TYPE string,
@@ -10,14 +18,14 @@ INTERFACE z2ui5_if_client
 
   TYPES:
     BEGIN OF ty_s_get,
-      event             TYPE string,
-      t_event_arg       TYPE string_table,
-      check_launchpad_active type abap_bool,
-      id                TYPE string,
-      id_prev           TYPE string,
-      id_prev_app       TYPE string,
-      id_prev_app_stack TYPE string,
-      t_scroll_pos      TYPE ty_t_name_value,
+      event                  TYPE string,
+      t_event_arg            TYPE string_table,
+      check_launchpad_active TYPE abap_bool,
+      id                     TYPE string,
+      id_prev                TYPE string,
+      id_prev_app            TYPE string,
+      id_prev_app_stack      TYPE string,
+      t_scroll_pos           TYPE ty_t_name_value,
       BEGIN OF s_cursor,
         id             TYPE string,
         cursorpos      TYPE string,
@@ -50,6 +58,19 @@ INTERFACE z2ui5_if_client
   METHODS set_next
     IMPORTING val TYPE ty_S_next.
 
+  METHODS set_view
+    IMPORTING
+      val TYPE string.
+
+  METHODS set_popup
+    IMPORTING
+      val TYPE string.
+
+  METHODS set_popover
+    IMPORTING
+      val TYPE string.
+
+
   METHODS get
     RETURNING VALUE(result) TYPE ty_s_get.
 
@@ -73,9 +94,9 @@ INTERFACE z2ui5_if_client
     IMPORTING text TYPE string.
 
   METHODS _bind
-    IMPORTING val            TYPE data
-              path           TYPE abap_bool DEFAULT abap_false
-    RETURNING VALUE(result)  TYPE string.
+    IMPORTING val           TYPE data
+              path          TYPE abap_bool DEFAULT abap_false
+    RETURNING VALUE(result) TYPE string.
 
   METHODS _bind_one
     IMPORTING val           TYPE data
@@ -89,6 +110,23 @@ INTERFACE z2ui5_if_client
     RETURNING VALUE(result) TYPE string.
 
   METHODS _event_close_popup
+    RETURNING VALUE(result) TYPE string.
+
+
+  METHODS __bind
+    IMPORTING val           TYPE data
+              path          TYPE abap_bool DEFAULT abap_false
+    RETURNING VALUE(result) TYPE string.
+
+
+  METHODS __bind_edit
+    IMPORTING val           TYPE data
+              path          TYPE abap_bool DEFAULT abap_false
+    RETURNING VALUE(result) TYPE string.
+
+
+  METHODS __event_frontend
+    IMPORTING val           TYPE string
     RETURNING VALUE(result) TYPE string.
 
 ENDINTERFACE.

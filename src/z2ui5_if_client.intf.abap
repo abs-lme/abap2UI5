@@ -18,6 +18,12 @@ INTERFACE z2ui5_if_client
       id_prev_app       TYPE string,
       id_prev_app_stack TYPE string,
       t_scroll_pos      TYPE ty_t_name_value,
+      BEGIN OF s_cursor,
+        id             TYPE string,
+        cursorpos      TYPE string,
+        selectionstart TYPE string,
+        selectionend   TYPE string,
+      END OF s_cursor,
     END OF ty_s_get.
 
   TYPES:

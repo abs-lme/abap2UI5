@@ -1076,7 +1076,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
     LOOP AT t_attri REFERENCE INTO DATA(lr_attri)
          WHERE bind_type = cs_bind_type-two_way.
 
-         data(lv_type_kind) = lr_attri->type_kind.
+      DATA(lv_type_kind) = lr_attri->type_kind.
       TRY.
           FIELD-SYMBOLS <backend> TYPE any.
           DATA(lv_name) = `LO_APP->` && lr_attri->name.
@@ -1217,6 +1217,15 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
         DATA(lo_scroll) = mo_body->get_attribute( `OSCROLL` ).
         z2ui5_lcl_utility=>trans_ref_tab_2_tab( EXPORTING ir_tab_from = lo_scroll->mr_actual
                                                 IMPORTING t_result    = result->ms_actual-t_scroll_pos ).
+      CATCH cx_root.
+    ENDTRY.
+
+    TRY.
+        DATA(lo_cursor) = mo_body->get_attribute( `OCURSOR` ).
+        result->ms_actual-s_cursor-id = lo_cursor->get_attribute( `ID` )->get_val( ).
+        result->ms_actual-s_cursor-cursorpos = lo_cursor->get_attribute( `CURSORPOS` )->get_val( ).
+        result->ms_actual-s_cursor-selectionend = lo_cursor->get_attribute( `SELECTIONEND` )->get_val( ).
+        result->ms_actual-s_cursor-selectionstart = lo_cursor->get_attribute( `SELECTIONSTART` )->get_val( ).
       CATCH cx_root.
     ENDTRY.
 

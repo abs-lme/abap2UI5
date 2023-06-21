@@ -144,6 +144,7 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                   this.oBody.CHECKLAUNCHPADACTIVE = true; ` && |\n| &&
                            `                } }` && |\n| &&
                            `                this.oBody.ARGUMENTS = arguments;` && |\n| &&
+                           `          try {   this.oBody.OCURSOR = sap.ui.getCore().byId( sap.ui.getCore().getCurrentFocusedControlId() ).getFocusInfo(); } catch (e) {}` && |\n| &&
                            |\n| &&
                            `                if (sap.z2ui5.checkLogActive) {` && |\n| &&
                            `                    console.log('Request Object:');` && |\n| &&
@@ -152,6 +153,7 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                sap.z2ui5.oResponseOld = sap.z2ui5.oResponse;` && |\n| &&
                            `                sap.z2ui5.oResponse = {};` && |\n| &&
                            `                sap.z2ui5.oBody = this.oBody;` && |\n| &&
+                           `                sap.z2ui5.isHoldView = oEvent.isHoldView;` && |\n| &&
                            `                sap.z2ui5.Roundtrip(oEvent.isHoldView);` && |\n| &&
                            `            },` && |\n| &&
                            `            Roundtrip: function (isHoldView) {` && |\n| &&
@@ -185,7 +187,9 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                        sap.m[sap.z2ui5.oResponse.S_MSG.CONTROL][sap.z2ui5.oResponse.S_MSG.TYPE](sap.z2ui5.oResponse.S_MSG.TEXT);` && |\n| &&
                            `                    }` && |\n| &&
                            |\n| &&
-                           `                    if (!sap.z2ui5.oResponse.PARAMS.XML_MAIN) {` && |\n| &&
+                           `                    if (!sap.z2ui5.oResponse.PARAMS.XML_MAIN || sap.z2ui5.isHoldView ) {` && |\n| &&
+                           `                        var oModel = new sap.ui.model.json.JSONModel(sap.z2ui5.oResponse.OVIEWMODEL);` && |\n| &&
+                           `                        sap.z2ui5.oView.setModel(oModel);` && |\n| &&
                            `                        sap.z2ui5.onAfter();` && |\n| &&
                            `                        return;` && |\n| &&
                            `                    }` && |\n| &&
@@ -230,6 +234,7 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `            }` && |\n| &&
                            `            var oView = sap.z2ui5.oView;` && |\n| &&
                            `            try {` && |\n| &&
+                           `   if (sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID !== '') {` && |\n| &&
                            `jQuery.sap.delayedCall(50, this, function() {` && |\n| &&
 *                            `oView.byId(sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID).addEventDelegate({` && |\n|  &&
 *                            `    onAfterRendering: function(){` && |\n|  &&
@@ -238,13 +243,13 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                             `        ofocus.selectionEnd = parseInt(sap.z2ui5.oResponse.PARAMS.S_CURSOR.SELECTIONEND);` && |\n| &&
                             `        sap.z2ui5.oView.byId(sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID).applyFocusInfo(ofocus);` && |\n| &&
                             `    } );` && |\n| &&
+                       `    }` && |\n| &&
 *                            `});` &&
-*                           `                if (sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID !== '') {` && |\n| &&
 *                           `                    var ofocus = oView.byId(sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID).getFocusInfo();` && |\n| &&
 *                           `                    ofocus.cursorPos = parseInt(sap.z2ui5.oResponse.PARAMS.S_CURSOR.CURSORPOS);` && |\n| &&
 *                           `                    ofocus.selectionStart = parseInt(sap.z2ui5.oResponse.PARAMS.S_CURSOR.SELECTIONSTART);` && |\n| &&
 *                           `                    ofocus.selectionEnd = parseInt(sap.z2ui5.oResponse.PARAMS.S_CURSOR.SELECTIONEND);` && |\n| &&
-*                           `                }` && |\n| &&
+
 *                           `                oView.byId(sap.z2ui5.oResponse.PARAMS.S_CURSOR.ID).applyFocusInfo(ofocus);` && |\n| &&
                            `            } catch (error) { }` && |\n| &&
                            `            ; try { } catch (error) { }` && |\n| &&

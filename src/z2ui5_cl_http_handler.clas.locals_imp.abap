@@ -300,6 +300,7 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
           DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
           DATA(lo_reftype) = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
           ls_attri2-o_typedescr = lo_reftype.
+          ls_attri2-gen_type = 'X'.
         CATCH cx_root.
       ENDTRY.
 *      ENDIF.
@@ -742,7 +743,6 @@ CLASS z2ui5_lcl_fw_app DEFINITION.
     DATA:
       BEGIN OF ms_error,
         x_error   TYPE REF TO cx_root,
-*        app       TYPE REF TO z2ui5_if_app,
         classname TYPE string,
         kind      TYPE string,
       END OF ms_error.
@@ -760,9 +760,10 @@ CLASS z2ui5_lcl_fw_app DEFINITION.
       END OF ms_home.
 
     CLASS-METHODS factory_error
-      IMPORTING error         TYPE REF TO cx_root
-                app           TYPE REF TO object OPTIONAL
-      RETURNING VALUE(result) TYPE REF TO z2ui5_lcl_fw_app.
+      IMPORTING
+        error         TYPE REF TO cx_root
+      RETURNING
+        VALUE(result) TYPE REF TO z2ui5_lcl_fw_app.
 
     DATA mv_is_initialized TYPE abap_bool.
     DATA mv_view_name      TYPE string.
@@ -790,9 +791,10 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD factory_error.
+
     result = NEW #( ).
     result->ms_error-x_error = error.
-*    result->ms_error-app     = CAST #( app ).
+
   ENDMETHOD.
 
   METHOD z2ui5_on_init.
@@ -810,6 +812,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD z2ui5_on_event.
+
     CASE mv_view_name.
 
       WHEN `HOME`.
@@ -1032,28 +1035,28 @@ CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
     z2ui5_lcl_utility=>trans_xml_2_object( EXPORTING xml  = ls_db-data
                                            IMPORTING data = result ).
 
-    data(lo_app) = cast object( result-o_app ).
-
-    LOOP AT result-t_attri REFERENCE INTO DATA(lr_attri) WHERE rtti_data IS NOT INITIAL.
-
-      FIELD-SYMBOLS <attribute> TYPE any.
-      DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
-      ASSIGN (lv_name) TO <attribute>.
-
-      z2ui5_lcl_utility=>rtti_set(
-        EXPORTING
-          rtti_data = lr_attri->rtti_data
-        IMPORTING
-           e_data    =  <attribute>
-      ).
-
-      DATA(lo_descr) = cl_abap_datadescr=>describe_by_data( <attribute> ).
-      DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
-      lr_attri->o_typedescr = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
-
-      CLEAR lr_attri->rtti_data.
-
-    ENDLOOP.
+*    DATA(lo_app) = CAST object( result-o_app ).
+*
+*    LOOP AT result-t_attri REFERENCE INTO DATA(lr_attri) WHERE rtti_data IS NOT INITIAL.
+*
+*      FIELD-SYMBOLS <attribute> TYPE any.
+*      DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
+*      ASSIGN (lv_name) TO <attribute>.
+*
+*      z2ui5_lcl_utility=>rtti_set(
+*        EXPORTING
+*          rtti_data = lr_attri->rtti_data
+*        IMPORTING
+*           e_data    =  <attribute>
+*      ).
+*
+*      DATA(lo_descr) = cl_abap_datadescr=>describe_by_data( <attribute> ).
+*      DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
+*      lr_attri->o_typedescr = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
+*
+*      CLEAR lr_attri->rtti_data.
+*
+*    ENDLOOP.
 
   ENDMETHOD.
 
@@ -1061,16 +1064,20 @@ CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
 
     DATA(lo_app) = CAST object( db-o_app ) ##NEEDED.
 
-    LOOP AT db-t_attri REFERENCE INTO DATA(lr_attri) WHERE o_typedescr IS BOUND.
-
-      FIELD-SYMBOLS <attribute> TYPE any.
-      DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
-      ASSIGN (lv_name) TO <attribute>.
-      assign <attribute>->* to <attribute>.
-      lr_attri->rtti_data = z2ui5_lcl_utility=>rtti_get( <attribute> ).
-      CLEAR <attribute>.
-
-    ENDLOOP.
+*    LOOP AT db-t_attri REFERENCE INTO DATA(lr_attri).
+*
+*      IF lr_attri->o_typedescr IS BOUND.
+*
+*        FIELD-SYMBOLS <attribute> TYPE any.
+*        DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
+*        ASSIGN (lv_name) TO <attribute>.
+*        ASSIGN <attribute>->* TO <attribute>.
+*        lr_attri->rtti_data = z2ui5_lcl_utility=>rtti_get( <attribute> ).
+*        CLEAR <attribute>.
+*        CLEAR lr_attri->o_typedescr.
+*
+*      ENDIF.
+*    ENDLOOP.
 
     DATA(ls_db) = VALUE z2ui5_t_draft( uuid                = id
                                        uuid_prev           = db-id_prev
@@ -1177,6 +1184,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD model_set_backend.
+
     LOOP AT t_attri REFERENCE INTO DATA(lr_attri)
          WHERE bind_type = cs_bind_type-two_way.
 
@@ -1192,25 +1200,15 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
           ASSIGN (lv_name) TO <frontend>.
           z2ui5_lcl_utility=>raise( when = xsdbool( sy-subrc <> 0 ) ).
 
-          IF lr_attri->o_typedescr IS BOUND.
+          IF lr_attri->gen_type IS NOT INITIAL.
             ASSIGN <backend>->* TO <backend>.
-          ENDIF.
 
-*          IF lr_attri->gen_kind IS NOT INITIAL.
-*
-*            CASE lr_attri->gen_kind.
-*              WHEN cl_abap_datadescr=>kind_elem.
-*                CREATE DATA <backend> TYPE (lr_attri->gen_type).
-*                ASSIGN <backend>->* TO <backend>.
-*              WHEN cl_abap_datadescr=>kind_table.
-*                DATA lr_data TYPE REF TO data.
-*                CREATE DATA lr_data TYPE (lr_attri->gen_type).
-*                ASSIGN lr_data->* TO FIELD-SYMBOL(<field>).
-*                CREATE DATA <backend> LIKE STANDARD TABLE OF <field>.
-*                ASSIGN <backend>->* TO <backend>.
-*                lv_type_kind = `h`.
-*            ENDCASE.
-*          ENDIF.
+            TRY.
+                DATA(lo_tab)  = CAST cl_abap_tabledescr( cl_abap_datadescr=>describe_by_data( <backend> ) ).
+                lv_type_kind = `h`.
+              CATCH cx_root.
+            ENDTRY.
+          ENDIF.
 
           CASE lv_type_kind.
 
@@ -1227,9 +1225,9 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
                                              CHANGING  data = <backend> ).
                 WHEN OTHERS.
                   <backend> = <frontend>.
+
               ENDCASE.
           ENDCASE.
-
         CATCH cx_root.
       ENDTRY.
     ENDLOOP.
@@ -1447,7 +1445,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
       DATA lr_ref TYPE REF TO data.
       GET REFERENCE OF <attribute> INTO lr_ref.
 
-      IF lr_attri->o_typedescr IS BOUND.
+      IF lr_attri->gen_type IS NOT INITIAL.
 
         FIELD-SYMBOLS <field> TYPE any.
         ASSIGN lr_ref->* TO <field>.

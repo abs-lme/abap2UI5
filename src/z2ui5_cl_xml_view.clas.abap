@@ -1335,12 +1335,12 @@ CLASS Z2UI5_CL_XML_VIEW IMPLEMENTATION.
 
 
   METHOD hlp_get_source_code_url.
-    DATA(lv_url) = z2ui5_cl_http_handler=>client-t_header[ name = `referer` ]-value.
+*    DATA(lv_url) = z2ui5_cl_http_handler=>client-t_header[ name = `referer` ]-value.
 
-    SPLIT lv_url AT '?' INTO lv_url DATA(lv_dummy).
+*    SPLIT lv_url AT '?' INTO lv_url DATA(lv_dummy).
 
-    result = z2ui5_cl_http_handler=>client-t_header[ name = `origin` ]-value &&
-       `/sap/bc/adt/oo/classes/` && lcl_utility=>get_classname_by_ref( app ) &&
+    result = z2ui5_cl_http_handler=>config-origin &&
+      `/sap/bc/adt/oo/classes/` && lcl_utility=>get_classname_by_ref( app ) &&
        `/source/main`.
 
   ENDMETHOD.

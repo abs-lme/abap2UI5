@@ -605,7 +605,7 @@ CLASS z2ui5_lcl_fw_handler DEFINITION.
     DATA ms_actual TYPE z2ui5_if_client=>ty_s_get.
     DATA ms_next   TYPE ty_s_next.
 
-    CLASS-DATA mo_body TYPE REF TO z2ui5_lcl_utility_tree_json.
+    CLASS-DATA so_body TYPE REF TO z2ui5_lcl_utility_tree_json.
 
     CLASS-METHODS request_begin
       RETURNING VALUE(result) TYPE REF TO z2ui5_lcl_fw_handler.
@@ -614,9 +614,9 @@ CLASS z2ui5_lcl_fw_handler DEFINITION.
       RETURNING VALUE(result) TYPE string.
 
     METHODS _create_binding
-      IMPORTING value          TYPE data
-                type           TYPE string    DEFAULT cs_bind_type-two_way
-      RETURNING VALUE(result)  TYPE string.
+      IMPORTING value         TYPE data
+                type          TYPE string    DEFAULT cs_bind_type-two_way
+      RETURNING VALUE(result) TYPE string.
 
     CLASS-METHODS set_app_start
       RETURNING VALUE(result) TYPE REF TO z2ui5_lcl_fw_handler.
@@ -1041,10 +1041,10 @@ ENDCLASS.
 CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
   METHOD request_begin.
-    mo_body = z2ui5_lcl_utility_tree_json=>factory( z2ui5_cl_http_handler=>client-body ).
+    so_body = z2ui5_lcl_utility_tree_json=>factory( z2ui5_cl_http_handler=>client-body ).
 
     TRY.
-        DATA(lv_id_prev) = mo_body->get_attribute( `ID` )->get_val( ).
+        DATA(lv_id_prev) = so_body->get_attribute( `ID` )->get_val( ).
       CATCH cx_root.
         result = set_app_start( ).
         RETURN.
@@ -1055,12 +1055,12 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
   METHOD request_end.
     IF ms_next-s_set-path IS NOT INITIAL.
-      DATA(lv_path) = z2ui5_lcl_utility=>get_header_val( '~path' ).
-      DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
-      REPLACE lv_path_info IN lv_path WITH ``.
-      SHIFT lv_path RIGHT DELETING TRAILING `/`.
-      SHIFT lv_path LEFT DELETING LEADING ` `.
-      ms_next-s_set-path = lv_path && ms_next-s_set-path.
+*      DATA(lv_path) = z2ui5_lcl_utility=>get_header_val( '~path' ).
+*      DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
+*      REPLACE lv_path_info IN lv_path WITH ``.
+*      SHIFT lv_path RIGHT DELETING TRAILING `/`.
+*      SHIFT lv_path LEFT DELETING LEADING ` `.
+*      ms_next-s_set-path = lv_path && ms_next-s_set-path.
     ENDIF.
 
     DATA(lo_resp) = z2ui5_lcl_utility_tree_json=>factory( ).
@@ -1195,11 +1195,11 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
 
     TRY.
-        result->ms_actual-check_launchpad_active = mo_body->get_attribute( `CHECKLAUNCHPADACTIVE` )->get_val( ).
+        result->ms_actual-check_launchpad_active = so_body->get_attribute( `CHECKLAUNCHPADACTIVE` )->get_val( ).
       CATCH cx_root.
     ENDTRY.
 
-    DATA(lo_arg) = mo_body->get_attribute( `ARGUMENTS` ).
+    DATA(lo_arg) = so_body->get_attribute( `ARGUMENTS` ).
     TRY.
         result->ms_actual-event = lo_arg->get_attribute( `0` )->get_attribute( `EVENT` )->get_val( ).
       CATCH cx_root.
@@ -1214,14 +1214,14 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        DATA(lo_scroll) = mo_body->get_attribute( `OSCROLL` ).
+        DATA(lo_scroll) = so_body->get_attribute( `OSCROLL` ).
         z2ui5_lcl_utility=>trans_ref_tab_2_tab( EXPORTING ir_tab_from = lo_scroll->mr_actual
                                                 IMPORTING t_result    = result->ms_actual-t_scroll_pos ).
       CATCH cx_root.
     ENDTRY.
 
     TRY.
-        DATA(lo_cursor) = mo_body->get_attribute( `OCURSOR` ).
+        DATA(lo_cursor) = so_body->get_attribute( `OCURSOR` ).
         result->ms_actual-s_cursor-id = lo_cursor->get_attribute( `ID` )->get_val( ).
         result->ms_actual-s_cursor-cursorpos = lo_cursor->get_attribute( `CURSORPOS` )->get_val( ).
         result->ms_actual-s_cursor-selectionend = lo_cursor->get_attribute( `SELECTIONEND` )->get_val( ).
@@ -1230,7 +1230,15 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        model_set_backend( lr_model = mo_body->get_attribute( `OUPDATE` )->mr_actual
+        DATA(lo_location) = so_body->get_attribute( `OLOCATION` ).
+        z2ui5_cl_http_handler=>config-origin = lo_location->get_attribute( `ORIGIN` )->get_val( ).
+        z2ui5_cl_http_handler=>config-pathname = lo_location->get_attribute( `PATHNAME` )->get_val( ).
+        z2ui5_cl_http_handler=>config-search = lo_location->get_attribute( `SEARCH` )->get_val( ).
+      CATCH cx_root.
+    ENDTRY.
+
+    TRY.
+        model_set_backend( lr_model = so_body->get_attribute( `OUPDATE` )->mr_actual
                            lo_app   = result->ms_db-o_app
                            t_attri  = result->ms_db-t_attri ).
       CATCH cx_root.
@@ -1239,18 +1247,24 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD set_app_start.
+
     result = NEW #( ).
     result->ms_db-id = z2ui5_lcl_utility=>get_uuid( ).
 
     TRY.
-        DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
+*        DATA(lv_path_info) = z2ui5_lcl_utility=>get_header_val( '~path_info' ).
+        FIELD-SYMBOLS <path> TYPE string.
+        ASSIGN ('SO_BODY->MR_ACTUAL->OLOCATION->PATHNAME->*') TO <path>.
+        SPLIT <path> AT z2ui5_cl_http_handler=>config-handler && '/' into DATA(lv_dummy) <path>.
+*        SPLIT <path> AT `/` INTO TABLE DATA(lt_tab).
+          DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( <path> ).
       CATCH cx_root.
     ENDTRY.
 
     " TODO: variable is assigned but never used (ABAP cleaner)
-    SPLIT lv_path_info AT `?` INTO lv_path_info DATA(lv_dummy).
-    DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
-    SHIFT lv_classname LEFT DELETING LEADING `/`.
+*    SPLIT lv_path_info AT `?` INTO lv_path_info DATA(lv_dummy).
+*     DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
+*    SHIFT lv_classname LEFT DELETING LEADING `/`.
 
     IF lv_classname IS INITIAL.
       result = result->set_app_system( ).
@@ -1261,8 +1275,8 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
         TRY.
             CREATE OBJECT result->ms_db-o_app TYPE (lv_classname).
           CATCH cx_root.
-            SPLIT lv_classname AT `/` INTO lv_classname lv_dummy.
-            CREATE OBJECT result->ms_db-o_app TYPE (lv_classname).
+*            SPLIT lv_classname AT `/` INTO lv_classname data(lv_dummy).
+*            CREATE OBJECT result->ms_db-o_app TYPE (lv_classname).
         ENDTRY.
         result->ms_db-o_app->id = result->ms_db-id.
         result->ms_db-t_attri   = z2ui5_lcl_utility=>get_t_attri_by_ref( result->ms_db-o_app ).

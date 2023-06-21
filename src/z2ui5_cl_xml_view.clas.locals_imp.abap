@@ -1,6 +1,7 @@
 CLASS lcl_utility DEFINITION INHERITING FROM cx_no_check.
 
   PUBLIC SECTION.
+
     CLASS-METHODS get_json_boolean
       IMPORTING val           TYPE any
       RETURNING VALUE(result) TYPE string.

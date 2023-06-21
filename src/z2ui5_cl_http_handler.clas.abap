@@ -12,8 +12,12 @@ CLASS z2ui5_cl_http_handler DEFINITION
       END OF client.
 
     CLASS-DATA:
-      BEGIN OF config READ-ONLY,
+      BEGIN OF config,
         controller_name TYPE string VALUE `z2ui5_controller`,
+        pathname type string,
+        origin type string,
+        search type string,
+        handler type string,
       END OF config.
 
     CLASS-METHODS http_get
@@ -161,6 +165,11 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
                            `                if (sap.z2ui5.oView ) { if (!isHoldView ) {` && |\n| &&
                            `                    sap.z2ui5.oView.destroy();` && |\n| &&
                            `                } }` && |\n| &&
+                           `              if (!sap.z2ui5.oBody) { sap.z2ui5.oBody = {}; };` && |\n| &&
+                           `              sap.z2ui5.oBody.OLOCATION = {};` && |\n| &&
+                           `              sap.z2ui5.oBody.OLOCATION.ORIGIN = window.location.origin;` && |\n| &&
+                           `              sap.z2ui5.oBody.OLOCATION.PATHNAME = window.location.pathname;` && |\n| &&
+                           `              sap.z2ui5.oBody.OLOCATION.SEARCH = window.location.search;` && |\n| &&
                            `                var xhr = new XMLHttpRequest();` && |\n| &&
                            `                xhr.open("POST", sap.z2ui5.pathname , true);` && |\n| &&
                            `                xhr.onload = function (that) {` && |\n| &&

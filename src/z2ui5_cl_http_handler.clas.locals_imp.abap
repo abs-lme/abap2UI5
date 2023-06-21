@@ -138,8 +138,10 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
 
         CALL TRANSFORMATION id SOURCE srtti = srtti dobj = data RESULT XML result.
 
-      CATCH cx_root INTO DATA(x).
-
+      CATCH cx_sy_dyn_call_illegal_class INTO DATA(x).
+        RAISE EXCEPTION TYPE z2ui5_lcl_utility
+          EXPORTING
+            val = `Please install the open-source project SRTTI to use generic data https://github.com/sandraros/S-RTTI`.
     ENDTRY.
 
   ENDMETHOD.
@@ -712,8 +714,9 @@ CLASS z2ui5_lcl_fw_db DEFINITION.
 
   PUBLIC SECTION.
     CLASS-METHODS create
-      IMPORTING id TYPE string
-                db TYPE z2ui5_lcl_fw_handler=>ty_s_db.
+
+      IMPORTING id        TYPE string
+                VALUE(db) TYPE z2ui5_lcl_fw_handler=>ty_s_db.
 
     CLASS-METHODS load_app
       IMPORTING id            TYPE string
@@ -737,7 +740,7 @@ CLASS z2ui5_lcl_fw_app DEFINITION.
     DATA:
       BEGIN OF ms_error,
         x_error   TYPE REF TO cx_root,
-        app       TYPE REF TO z2ui5_if_app,
+*        app       TYPE REF TO z2ui5_if_app,
         classname TYPE string,
         kind      TYPE string,
       END OF ms_error.
@@ -787,7 +790,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
   METHOD factory_error.
     result = NEW #( ).
     result->ms_error-x_error = error.
-    result->ms_error-app     = CAST #( app ).
+*    result->ms_error-app     = CAST #( app ).
   ENDMETHOD.
 
   METHOD z2ui5_on_init.
@@ -860,17 +863,18 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD z2ui5_on_rendering.
+
     IF ms_error-x_error IS BOUND.
 
       ms_error-x_error->get_source_position( IMPORTING program_name = DATA(lv_prog)
                                                        include_name = DATA(lv_incl)
                                                        source_line  = DATA(lv_line) ).
 
-      IF client->get_app( client->get( )-id_prev_app ) IS BOUND.
-        DATA(lv_check_back) = `true`.
-      ELSE.
-        lv_check_back = `false`.
-      ENDIF.
+*      IF client->get_app( client->get( )-id_prev_app ) IS BOUND.
+*        DATA(lv_check_back) = `true`.
+*      ELSE.
+      DATA(lv_check_back) = `false`.
+*      ENDIF.
 
       DATA(lv_descr) = ms_error-x_error->get_text( ) &&
             ` -------------------------------------------------------------------------------------------- Source Code Position: ` &&
@@ -1026,7 +1030,9 @@ CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
     z2ui5_lcl_utility=>trans_xml_2_object( EXPORTING xml  = ls_db-data
                                            IMPORTING data = result ).
 
-    LOOP AT result-t_attri REFERENCE INTO DATA(lr_attri) WHERE gen_type IS NOT INITIAL.
+    data(lo_app) = cast object( result-o_app ).
+
+    LOOP AT result-t_attri REFERENCE INTO DATA(lr_attri) WHERE rtti_data IS NOT INITIAL.
 
       FIELD-SYMBOLS <attribute> TYPE any.
       DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
@@ -1036,8 +1042,12 @@ CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
         EXPORTING
           rtti_data = lr_attri->rtti_data
         IMPORTING
-           e_data    = <attribute>
+           e_data    =  <attribute>
       ).
+
+      DATA(lo_descr) = cl_abap_datadescr=>describe_by_data( <attribute> ).
+      DATA(lo_refdescr) = CAST cl_abap_refdescr( lo_descr ).
+      lr_attri->o_typedescr = CAST cl_abap_datadescr( lo_refdescr->get_referenced_type( ) ).
 
       CLEAR lr_attri->rtti_data.
 
@@ -1049,12 +1059,12 @@ CLASS z2ui5_lcl_fw_db IMPLEMENTATION.
 
     DATA(lo_app) = CAST object( db-o_app ) ##NEEDED.
 
-    LOOP AT db-t_attri REFERENCE INTO DATA(lr_attri) WHERE gen_type IS NOT INITIAL.
+    LOOP AT db-t_attri REFERENCE INTO DATA(lr_attri) WHERE o_typedescr IS BOUND.
 
       FIELD-SYMBOLS <attribute> TYPE any.
       DATA(lv_name) = 'LO_APP->' && to_upper( lr_attri->name ).
       ASSIGN (lv_name) TO <attribute>.
-
+      assign <attribute>->* to <attribute>.
       lr_attri->rtti_data = z2ui5_lcl_utility=>rtti_get( <attribute> ).
       CLEAR <attribute>.
 
@@ -1179,6 +1189,10 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
           lv_name = `LR_MODEL->` && replace( val = lr_attri->name sub = `-` with = `_` occ = 0 ).
           ASSIGN (lv_name) TO <frontend>.
           z2ui5_lcl_utility=>raise( when = xsdbool( sy-subrc <> 0 ) ).
+
+          IF lr_attri->o_typedescr IS BOUND.
+            ASSIGN <backend>->* TO <backend>.
+          ENDIF.
 
 *          IF lr_attri->gen_kind IS NOT INITIAL.
 *
@@ -1491,7 +1505,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
   METHOD set_app_system.
     IF ms_db-o_app IS BOUND.
-      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
+*      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
     ENDIF.
 
     result = NEW #( ).
@@ -1503,8 +1517,8 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
     IF ix IS BOUND.
 
-      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
-      result->ms_db-o_app             = z2ui5_lcl_fw_app=>factory_error( error = ix app = ms_db-o_app ).
+*      z2ui5_lcl_fw_db=>create( id = ms_db-id db = ms_db ).
+      result->ms_db-o_app             = z2ui5_lcl_fw_app=>factory_error( error = ix  ).
 
       result->ms_db-id_prev_app       = ms_db-id.
       result->ms_db-id_prev_app_stack = ms_db-id.

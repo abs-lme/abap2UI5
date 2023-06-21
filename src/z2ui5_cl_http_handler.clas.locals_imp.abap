@@ -194,17 +194,17 @@ CLASS z2ui5_lcl_utility IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_header_val.
-    result = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = v ]-value ).
+*    result = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = v ]-value ).
   ENDMETHOD.
 
   METHOD get_param_val.
-    DATA(lt_param) = VALUE z2ui5_if_client=>ty_t_name_value(
-                               LET tab = z2ui5_cl_http_handler=>client-t_param IN FOR row IN tab
-                               ( name = to_upper( row-name ) value = to_upper( row-value ) ) ).
-    TRY.
-        result = lt_param[ name = get_trim_upper( v ) ]-value.
-      CATCH cx_root.
-    ENDTRY.
+*    DATA(lt_param) = VALUE z2ui5_if_client=>ty_t_name_value(
+*                               LET tab = z2ui5_cl_http_handler=>client-t_param IN FOR row IN tab
+*                               ( name = to_upper( row-name ) value = to_upper( row-value ) ) ).
+*    TRY.
+*        result = lt_param[ name = get_trim_upper( v ) ]-value.
+*      CATCH cx_root.
+*    ENDTRY.
   ENDMETHOD.
 
   METHOD get_t_attri_by_ref.
@@ -844,16 +844,17 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        DATA(lv_url) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `referer` ]-value ).
-        DATA(lv_path_info) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `~path_info` ]-value ).
-        REPLACE lv_path_info IN lv_url WITH ``.
-        SPLIT lv_url AT '?' INTO lv_url DATA(lv_params).
-
-        SHIFT lv_url RIGHT DELETING TRAILING `/`.
-        DATA(lv_link) = lv_url && `/` && to_lower( ms_home-classname ).
-        IF lv_params IS NOT INITIAL.
-          lv_link = lv_link && `?` && lv_params.
-        ENDIF.
+*        DATA(lv_url) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `referer` ]-value ).
+*        DATA(lv_path_info) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `~path_info` ]-value ).
+*        REPLACE lv_path_info IN lv_url WITH ``.
+*        SPLIT lv_url AT '?' INTO lv_url DATA(lv_params).
+*
+*        SHIFT lv_url RIGHT DELETING TRAILING `/`.
+*        DATA(lv_link) = lv_url && `/` && to_lower( ms_home-classname ).
+*        IF lv_params IS NOT INITIAL.
+*          lv_link = lv_link && `?` && lv_params.
+*        ENDIF.
+data(lv_link) = ``.
       CATCH cx_root.
     ENDTRY.
 

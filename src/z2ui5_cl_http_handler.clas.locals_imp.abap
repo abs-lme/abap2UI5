@@ -960,7 +960,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
 
     lv_xml_main = lv_xml_main && ` <f:content ` && |\n| &&
     ` > <Label/><Button ` && |\n| &&
-    `  press="` && client->__event( `DEMOS` ) && `" ` && |\n| &&
+    `  press="` && client->__event( val = `DEMOS` check_view_transit = abap_true ) && `" ` && |\n| &&
     `  text="Continue..." enabled="` && COND #( WHEN lv_check_demo = abap_true THEN `true` ELSE `false` ) && |" \n| &&
     ` /></f:content></f:SimpleForm></l:content></l:Grid></Page></Shell></mvc:View>`.
 
@@ -1513,7 +1513,9 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
 
   METHOD z2ui5_if_client~__event.
 
-    result = `onEvent( { 'EVENT' : '` && val && `', 'METHOD' : 'UPDATE' , 'isHoldView' : ` && z2ui5_lcl_utility=>get_json_boolean( abap_true ) && ` }`.
+    data(lv_hold_view) = xsdbool( check_view_transit = abap_false ).
+
+    result = `onEvent( { 'EVENT' : '` && val && `', 'METHOD' : 'UPDATE' , 'isHoldView' : ` && z2ui5_lcl_utility=>get_json_boolean( lv_hold_view ) && ` }`.
 
     LOOP AT t_arg REFERENCE INTO DATA(lr_arg).
       result = result && `,` && lr_arg->*.

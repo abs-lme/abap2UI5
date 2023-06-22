@@ -960,7 +960,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
 
     lv_xml_main = lv_xml_main && ` <f:content ` && |\n| &&
     ` > <Label/><Button ` && |\n| &&
-    `  press="` && client->_event( `DEMOS` ) && `" ` && |\n| &&
+    `  press="` && client->__event( `DEMOS` ) && `" ` && |\n| &&
     `  text="Continue..." enabled="` && COND #( WHEN lv_check_demo = abap_true THEN `true` ELSE `false` ) && |" \n| &&
     ` /></f:content></f:SimpleForm></l:content></l:Grid></Page></Shell></mvc:View>`.
 
@@ -1456,35 +1456,6 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
     mo_handler->ms_next-o_call_app = app.
   ENDMETHOD.
 
-  METHOD z2ui5_if_client~set_next.
-    mo_handler->ms_next-s_set = val.
-  ENDMETHOD.
-
-  METHOD z2ui5_if_client~_bind.
-    result = mo_handler->_create_binding( value          = val
-                                          type           = z2ui5_lcl_fw_handler=>cs_bind_type-two_way ).
-    IF path = abap_false.
-      result = `{` && result && `}`.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD z2ui5_if_client~_bind_one.
-    result = mo_handler->_create_binding( value = val type = z2ui5_lcl_fw_handler=>cs_bind_type-one_way ).
-    IF path = abap_false.
-      result = `{` && result && `}`.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD z2ui5_if_client~_event.
-    result = `onEvent( { 'EVENT' : '` && val && `', 'METHOD' : 'UPDATE' , 'isHoldView' : ` && z2ui5_lcl_utility=>get_json_boolean(
-                                                                                                  hold_view ) && ` }`.
-
-    LOOP AT t_arg REFERENCE INTO DATA(lr_arg).
-      result = result && `,` && lr_arg->*.
-    ENDLOOP.
-
-    result = result && `)`.
-  ENDMETHOD.
 
   METHOD z2ui5_if_client~_event_close_popup.
     result = `onEventFrontend( 'POPUP_CLOSE' )`.

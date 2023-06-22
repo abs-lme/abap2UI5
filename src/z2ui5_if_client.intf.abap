@@ -67,9 +67,6 @@ INTERFACE z2ui5_if_client
       _viewmodel         TYPE string,
     END OF ty_s_next.
 
-  METHODS set_next
-    IMPORTING val TYPE ty_S_next.
-
   METHODS set_view
     IMPORTING
       val TYPE string.
@@ -103,22 +100,6 @@ INTERFACE z2ui5_if_client
 
   METHODS popup_message_toast
     IMPORTING text TYPE string.
-
-  METHODS _bind
-    IMPORTING val           TYPE data
-              path          TYPE abap_bool DEFAULT abap_false
-    RETURNING VALUE(result) TYPE string.
-
-  METHODS _bind_one
-    IMPORTING val           TYPE data
-              path          TYPE abap_bool DEFAULT abap_false
-    RETURNING VALUE(result) TYPE string.
-
-  METHODS _event
-    IMPORTING val           TYPE clike
-              hold_view     TYPE abap_bool    DEFAULT abap_false
-              t_arg         TYPE string_table OPTIONAL
-    RETURNING VALUE(result) TYPE string.
 
   METHODS _event_close_popup
     RETURNING VALUE(result) TYPE string.

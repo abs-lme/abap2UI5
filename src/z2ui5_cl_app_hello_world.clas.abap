@@ -59,6 +59,5 @@ CLASS z2ui5_cl_app_hello_world IMPLEMENTATION.
         client->nav_app_leave( client->get_app( client->get( )-id_prev_app_stack  ) ).
     ENDCASE.
 
-
   ENDMETHOD.
 ENDCLASS.

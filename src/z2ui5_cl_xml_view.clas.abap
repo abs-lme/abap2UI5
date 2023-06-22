@@ -20,21 +20,23 @@ CLASS z2ui5_cl_xml_view DEFINITION
     DATA m_parent TYPE REF TO z2ui5_cl_xml_view.
     DATA t_child  TYPE STANDARD TABLE OF REF TO z2ui5_cl_xml_view WITH EMPTY KEY.
 
+    data ss_config type z2ui5_if_client=>ty_s_config.
+
     CLASS-METHODS factory
-      IMPORTING t_ns          TYPE ty_t_name_value OPTIONAL
+      IMPORTING
+        t_ns          TYPE ty_t_name_value OPTIONAL
+        client        type ref to z2ui5_if_client
       RETURNING VALUE(result) TYPE REF TO z2ui5_cl_xml_view.
 
     CLASS-METHODS factory_popup
       IMPORTING t_ns          TYPE ty_t_name_value OPTIONAL
       RETURNING VALUE(result) TYPE REF TO z2ui5_cl_xml_view.
 
-    CLASS-METHODS hlp_get_source_code_url
-      IMPORTING
-        app           TYPE REF TO z2ui5_if_app
+    METHODS hlp_get_source_code_url
       RETURNING
         VALUE(result) TYPE string.
 
-    CLASS-METHODS hlp_replace_controller_name
+    METHODS hlp_replace_controller_name
       IMPORTING xml           TYPE string
       RETURNING VALUE(result) TYPE string.
 
@@ -1182,21 +1184,25 @@ CLASS Z2UI5_CL_XML_VIEW IMPLEMENTATION.
 
 
   METHOD factory.
+
     result = NEW #( ).
 
     IF t_ns IS NOT INITIAL.
       result->mt_prop = t_ns.
     ENDIF.
 
+    result->ss_config = client->get( )-s_config.
     result->mt_prop  = VALUE #( BASE result->mt_prop
                                 (  n = 'displayBlock'   v = 'true' )
                                 (  n = 'height'         v = '100%' )
-                                (  n = 'controllerName' v = z2ui5_cl_http_handler=>config-controller_name ) ).
+*                                (  n = 'controllerName' v = z2ui5_cl_http_handler=>config-controller_name ) ).
+                                (  n = 'controllerName' v = result->ss_config-controller_name ) ).
 
     result->m_name   = `View`.
     result->m_ns     = `mvc`.
     result->m_root   = result.
     result->m_parent = result.
+
   ENDMETHOD.
 
 
@@ -1339,19 +1345,21 @@ CLASS Z2UI5_CL_XML_VIEW IMPLEMENTATION.
 
 *    SPLIT lv_url AT '?' INTO lv_url DATA(lv_dummy).
 
-    result = z2ui5_cl_http_handler=>config-origin &&
-      `/sap/bc/adt/oo/classes/` && lcl_utility=>get_classname_by_ref( app ) &&
+    result = ss_config-origin &&
+      `/sap/bc/adt/oo/classes/` && lcl_utility=>get_classname_by_ref( ss_config-app ) &&
        `/source/main`.
 
   ENDMETHOD.
 
 
   METHOD hlp_replace_controller_name.
+
     result = lcl_utility=>get_replace(
                  iv_val     = xml
                  iv_begin   = 'controllerName="'
                  iv_end     = '"'
-                 iv_replace = `controllerName="` && z2ui5_cl_http_handler=>config-controller_name && `"` ).
+                 iv_replace = `controllerName="` && ss_config-controller_name && `"` ).
+
   ENDMETHOD.
 
 

@@ -588,6 +588,8 @@ CLASS z2ui5_lcl_fw_handler DEFINITION.
         o_app             TYPE REF TO z2ui5_if_app,
       END OF ty_s_db.
 
+    class-data ss_config type z2ui5_if_client=>ty_s_config.
+
     DATA ms_db TYPE ty_s_db.
 
     TYPES:
@@ -1042,7 +1044,8 @@ ENDCLASS.
 CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
   METHOD request_begin.
-*    so_body = z2ui5_lcl_utility_tree_json=>factory( z2ui5_cl_http_handler=>client-body ).
+
+    so_body = z2ui5_lcl_utility_tree_json=>factory( z2ui5_lcl_fw_handler=>ss_config-body ).
 
     TRY.
         DATA(lv_id_prev) = so_body->get_attribute( `ID` )->get_val( ).
@@ -1232,9 +1235,9 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
     TRY.
         DATA(lo_location) = so_body->get_attribute( `OLOCATION` ).
-        z2ui5_cl_http_handler=>config-origin = lo_location->get_attribute( `ORIGIN` )->get_val( ).
-        z2ui5_cl_http_handler=>config-pathname = lo_location->get_attribute( `PATHNAME` )->get_val( ).
-        z2ui5_cl_http_handler=>config-search = lo_location->get_attribute( `SEARCH` )->get_val( ).
+        z2ui5_lcl_fw_handler=>ss_config-origin = lo_location->get_attribute( `ORIGIN` )->get_val( ).
+        z2ui5_lcl_fw_handler=>ss_config-pathname = lo_location->get_attribute( `PATHNAME` )->get_val( ).
+        z2ui5_lcl_fw_handler=>ss_config-search = lo_location->get_attribute( `SEARCH` )->get_val( ).
       CATCH cx_root.
     ENDTRY.
 
@@ -1263,7 +1266,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 *    ENDTRY.
 
     " TODO: variable is assigned but never used (ABAP cleaner)
-    SPLIT z2ui5_cl_http_handler=>config-path_info AT `?` INTO DATA(lv_path_info) DATA(lv_dummy).
+    SPLIT z2ui5_lcl_fw_handler=>ss_config-path_info AT `?` INTO DATA(lv_path_info) DATA(lv_dummy).
     data(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
     SHIFT lv_classname LEFT DELETING LEADING `/`.
 
@@ -1437,11 +1440,14 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD z2ui5_if_client~get.
+
     result = VALUE #( BASE CORRESPONDING #( mo_handler->ms_db )
                       event                  = mo_handler->ms_actual-event
                       check_launchpad_active = mo_handler->ms_actual-check_launchpad_active
                       t_event_arg            = mo_handler->ms_actual-t_event_arg
-                      t_scroll_pos           = mo_handler->ms_actual-t_scroll_pos ).
+                      t_scroll_pos           = mo_handler->ms_actual-t_scroll_pos
+                      s_config = z2ui5_lcl_fw_handler=>ss_config ).
+                      result-s_config-app = mo_handler->ms_db-o_app.
   ENDMETHOD.
 
   METHOD z2ui5_if_client~nav_app_call.

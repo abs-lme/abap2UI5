@@ -10,6 +10,17 @@ INTERFACE z2ui5_if_client
     END OF cs_event.
 
   TYPES:
+    BEGIN OF ty_S_config,
+      controller_name TYPE string, " VALUE `z2ui5_controller`,
+      pathname        TYPE string,
+      origin          TYPE string,
+      search          TYPE string,
+      path_info       TYPE string,
+      body            TYPE string,
+      app             TYPE REF TO z2ui5_if_app,
+    END OF ty_S_config.
+
+  TYPES:
     BEGIN OF ty_s_name_value,
       name  TYPE string,
       value TYPE string,
@@ -20,11 +31,11 @@ INTERFACE z2ui5_if_client
     BEGIN OF ty_s_get,
       event                  TYPE string,
       t_event_arg            TYPE string_table,
-      check_launchpad_active TYPE abap_bool,
       id                     TYPE string,
       id_prev                TYPE string,
       id_prev_app            TYPE string,
       id_prev_app_stack      TYPE string,
+      check_launchpad_active TYPE abap_bool,
       t_scroll_pos           TYPE ty_t_name_value,
       BEGIN OF s_cursor,
         id             TYPE string,
@@ -32,6 +43,7 @@ INTERFACE z2ui5_if_client
         selectionstart TYPE string,
         selectionend   TYPE string,
       END OF s_cursor,
+      s_config               TYPE ty_S_config,
     END OF ty_s_get.
 
   TYPES:
@@ -69,7 +81,6 @@ INTERFACE z2ui5_if_client
   METHODS set_popover
     IMPORTING
       val TYPE string.
-
 
   METHODS get
     RETURNING VALUE(result) TYPE ty_s_get.

@@ -4,22 +4,6 @@ CLASS z2ui5_cl_http_handler DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-DATA:
-      BEGIN OF client,
-        body     TYPE string,
-        t_header TYPE z2ui5_if_client=>ty_t_name_value,
-        t_param  TYPE z2ui5_if_client=>ty_t_name_value,
-      END OF client.
-
-    CLASS-DATA:
-      BEGIN OF config,
-        controller_name TYPE string VALUE `z2ui5_controller`,
-        pathname type string,
-        origin type string,
-        search type string,
-        path_info type string,
-      END OF config.
-
     CLASS-METHODS http_get
       IMPORTING
         t_config                TYPE z2ui5_if_client=>ty_t_name_value OPTIONAL
@@ -29,9 +13,9 @@ CLASS z2ui5_cl_http_handler DEFINITION
         VALUE(r_result)         TYPE string.
 
     CLASS-METHODS http_post
-        importing
-            body type string optional
-            path_info type string optional
+      IMPORTING
+        body          TYPE string OPTIONAL
+        path_info     TYPE string OPTIONAL
       RETURNING
         VALUE(result) TYPE string.
 
@@ -321,8 +305,11 @@ CLASS z2ui5_cl_http_handler IMPLEMENTATION.
 
   METHOD http_post.
 
-    z2ui5_lcl_fw_handler=>so_body = z2ui5_lcl_utility_tree_json=>factory( body ).
-    config-path_info = path_info.
+    z2ui5_lcl_fw_handler=>ss_config = VALUE #(
+      controller_name = `z2ui5_controller`
+      path_info       = path_info
+      body            = body  ).
+
     DATA(lo_handler) = z2ui5_lcl_fw_handler=>request_begin( ).
 
     DO.

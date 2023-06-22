@@ -25,7 +25,7 @@ CLASS z2ui5_cl_app_hello_world IMPLEMENTATION.
         client->popup_message_toast( |{ product } { quantity } - send to the server| ).
     ENDCASE.
 
-    client->set_next( VALUE #( xml_main = z2ui5_cl_xml_view=>factory(
+    client->set_view( z2ui5_cl_xml_view=>factory( client
         )->shell(
         )->page( title = 'abap2UI5 - z2ui5_cl_app_hello_world'
             )->simple_form( title = 'Hello World' editable = abap_true
@@ -38,7 +38,7 @@ CLASS z2ui5_cl_app_hello_world IMPLEMENTATION.
                               enabled = abap_false
                     )->button( text  = 'post'
                                press = client->_event( 'BUTTON_POST' )
-         )->get_root( )->xml_get( ) ) ).
+         )->get_root( )->xml_get( ) ) .
 
   ENDMETHOD.
 ENDCLASS.

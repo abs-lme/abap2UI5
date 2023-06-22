@@ -588,7 +588,7 @@ CLASS z2ui5_lcl_fw_handler DEFINITION.
         o_app             TYPE REF TO z2ui5_if_app,
       END OF ty_s_db.
 
-    class-data ss_config type z2ui5_if_client=>ty_s_config.
+    CLASS-DATA ss_config TYPE z2ui5_if_client=>ty_s_config.
 
     DATA ms_db TYPE ty_s_db.
 
@@ -677,6 +677,7 @@ ENDCLASS.
 CLASS z2ui5_lcl_fw_app DEFINITION.
 
   PUBLIC SECTION.
+
     INTERFACES z2ui5_if_app.
 
     DATA:
@@ -719,7 +720,9 @@ ENDCLASS.
 
 
 CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
+
   METHOD z2ui5_if_app~main.
+
     IF mv_is_initialized = abap_false.
       mv_is_initialized = abap_true.
       z2ui5_on_init( ).
@@ -727,6 +730,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
 
     z2ui5_on_event( client ).
     z2ui5_on_rendering( client ).
+
   ENDMETHOD.
 
   METHOD factory_error.
@@ -737,6 +741,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD z2ui5_on_init.
+
     IF ms_error-x_error IS NOT BOUND.
       mv_view_name = 'HOME'.
       ms_home-is_initialized = abap_true.
@@ -748,6 +753,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
     ELSE.
       mv_view_name = 'ERROR'.
     ENDIF.
+
   ENDMETHOD.
 
   METHOD z2ui5_on_event.
@@ -814,11 +820,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
                                                        include_name = DATA(lv_incl)
                                                        source_line  = DATA(lv_line) ).
 
-*      IF client->get_app( client->get( )-id_prev_app ) IS BOUND.
-*        DATA(lv_check_back) = `true`.
-*      ELSE.
       DATA(lv_check_back) = `false`.
-*      ENDIF.
 
       DATA(lv_descr) = ms_error-x_error->get_text( ) &&
             ` -------------------------------------------------------------------------------------------- Source Code Position: ` &&
@@ -833,30 +835,30 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
                            `  enableFormattedText="true" ` && |\n| &&
                            ` > <buttons ` && |\n| &&
                            ` > <Button ` && |\n| &&
-                           `  press="` && client->_event( `BUTTON_HOME` ) && `" ` && |\n| &&
+                           `  press="` && client->__event( `BUTTON_HOME` ) && `" ` && |\n| &&
                            `  text="HOME" ` && |\n| &&
                            ` /> <Button ` && |\n| &&
-                           `  press="` && client->_event( `BUTTON_BACK` ) && `" ` && |\n| &&
+                           `  press="` && client->__event( `BUTTON_BACK` ) && `" ` && |\n| &&
                            `  text="BACK" ` && |\n| &&
                            `  type="Emphasized" enabled="` && lv_check_back && `"` && |\n| &&
                            ` /></buttons></MessagePage></Shell></mvc:View>`.
 
-      client->set_next( VALUE #( xml_main = lv_xml_error ) ).
+      client->set_view( lv_xml_error ).
       RETURN.
     ENDIF.
 
     TRY.
-*        DATA(lv_url) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `referer` ]-value ).
-*        DATA(lv_path_info) = to_lower( z2ui5_cl_http_handler=>client-t_header[ name = `~path_info` ]-value ).
-*        REPLACE lv_path_info IN lv_url WITH ``.
-*        SPLIT lv_url AT '?' INTO lv_url DATA(lv_params).
-*
-*        SHIFT lv_url RIGHT DELETING TRAILING `/`.
-*        DATA(lv_link) = lv_url && `/` && to_lower( ms_home-classname ).
-*        IF lv_params IS NOT INITIAL.
-*          lv_link = lv_link && `?` && lv_params.
-*        ENDIF.
-        DATA(lv_link) = ``.
+
+        DATA(lv_url) = to_lower( z2ui5_lcl_fw_handler=>ss_config-origin && z2ui5_lcl_fw_handler=>ss_config-pathname ).
+        DATA(lv_path_info) = to_lower( z2ui5_lcl_fw_handler=>ss_config-path_info ).
+        REPLACE lv_path_info IN lv_url WITH ``.
+        SPLIT lv_url AT '?' INTO lv_url DATA(lv_params).
+        SHIFT lv_url RIGHT DELETING TRAILING `/`.
+        DATA(lv_link) = lv_url && `/` && to_lower( ms_home-classname ).
+        IF lv_params IS NOT INITIAL.
+          lv_link = lv_link && `?` && lv_params.
+        ENDIF.
+
       CATCH cx_root.
     ENDTRY.
 
@@ -916,7 +918,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
       lv_xml_main = lv_xml_main && `<Input ` && |\n| &&
      `  placeholder="` && `fill in the class name and press 'check' ` && `" ` && |\n| &&
      `  editable="` && z2ui5_lcl_utility=>get_json_boolean( ms_home-class_editable ) && `" ` && |\n| &&
-     `  value="` && client->_bind( ms_home-classname ) && `" ` && |\n| &&
+     `  value="` && client->__bind_edit( ms_home-classname ) && `" ` && |\n| &&
      ` /> `.
     ELSE.
       lv_xml_main = lv_xml_main && `<Text ` && |\n| &&
@@ -925,7 +927,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
     ENDIF.
 
     lv_xml_main = lv_xml_main && `<Button ` && |\n| &&
-       `  press="`  && client->_event( ms_home-btn_event_id ) && `" ` && |\n| &&
+       `  press="`  && client->__event( ms_home-btn_event_id ) && `" ` && |\n| &&
        `  text="` && ms_home-btn_text && `" ` && |\n| &&
        `  icon="` && ms_home-btn_icon && `" ` && |\n| &&
        ` /> <Label ` && |\n| &&
@@ -962,7 +964,7 @@ CLASS z2ui5_lcl_fw_app IMPLEMENTATION.
     `  text="Continue..." enabled="` && COND #( WHEN lv_check_demo = abap_true THEN `true` ELSE `false` ) && |" \n| &&
     ` /></f:content></f:SimpleForm></l:content></l:Grid></Page></Shell></mvc:View>`.
 
-    client->set_next( VALUE #( xml_main = lv_xml_main ) ).
+    client->set_view( lv_xml_main ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -1267,7 +1269,7 @@ CLASS z2ui5_lcl_fw_handler IMPLEMENTATION.
 
     " TODO: variable is assigned but never used (ABAP cleaner)
     SPLIT z2ui5_lcl_fw_handler=>ss_config-path_info AT `?` INTO DATA(lv_path_info) DATA(lv_dummy).
-    data(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
+    DATA(lv_classname) = z2ui5_lcl_utility=>get_trim_upper( lv_path_info ).
     SHIFT lv_classname LEFT DELETING LEADING `/`.
 
     IF lv_classname IS INITIAL.
@@ -1447,7 +1449,7 @@ CLASS z2ui5_lcl_fw_client IMPLEMENTATION.
                       t_event_arg            = mo_handler->ms_actual-t_event_arg
                       t_scroll_pos           = mo_handler->ms_actual-t_scroll_pos
                       s_config = z2ui5_lcl_fw_handler=>ss_config ).
-                      result-s_config-app = mo_handler->ms_db-o_app.
+    result-s_config-app = mo_handler->ms_db-o_app.
   ENDMETHOD.
 
   METHOD z2ui5_if_client~nav_app_call.

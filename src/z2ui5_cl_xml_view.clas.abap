@@ -804,6 +804,9 @@ CLASS z2ui5_cl_xml_view DEFINITION
     METHODS xml_get
       RETURNING VALUE(result) TYPE string.
 
+     METHODS stringify
+      RETURNING VALUE(result) TYPE string.
+
 ENDCLASS.
 
 
@@ -2110,4 +2113,11 @@ CLASS Z2UI5_CL_XML_VIEW IMPLEMENTATION.
     m_root->m_last = result2.
     result = result2.
   ENDMETHOD.
+
+  METHOD STRINGIFY.
+
+    result = get_root( )->xml_get( ).
+
+  ENDMETHOD.
+
 ENDCLASS.
